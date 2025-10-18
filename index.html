@@ -80,4 +80,80 @@ footer.banner{position:fixed;left:0;right:0;bottom:0;background:#0c111b;border-t
 <button class="btn primary" id="btn-go">분석하기</button>
 <button class="btn" id="btn-share">공유하기</button>
 </div>
+
+<script>
+  // 콘솔 에러가 있으면 전체 스크립트가 멈추기 때문에 제일 먼저 감지
+  window.addEventListener('error', (e) => {
+    console.warn('[JS ERROR]', e.message);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('[READY] DOM loaded');
+
+    const btnGo = document.getElementById('btn-go');
+    const result = document.getElementById('result');
+    const birthDateEl = document.getElementById('birthDate');
+    const birthTimeEl = document.getElementById('birthTime');
+    const partnerDateEl = document.getElementById('partnerDate');
+    const partnerTimeEl = document.getElementById('partnerTime');
+
+    // 탭 상태 (없으면 today 기본)
+    let currentType = 'today';
+    const tabs = document.querySelectorAll('.tab');
+    if (tabs.length) {
+      tabs.forEach(t => t.addEventListener('click', () => {
+        tabs.forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        currentType = t.dataset.type || 'today';
+      }));
+    }
+
+    // 클릭 이벤트가 정말로 걸렸는지 로그/알림으로 검증
+    btnGo?.addEventListener('click', async () => {
+      console.log('[CLICK] 분석하기 pressed');
+      // 1단계: 클릭 반응 확인용
+      // alert('클릭 OK'); // 필요하면 잠깐 주석 해제해서 확인
+
+      const birthDate = birthDateEl?.value;
+      const birthTime = birthTimeEl?.value || '00:00';
+      const partnerDate = partnerDateEl?.value;
+      const partnerTime = partnerTimeEl?.value || '00:00';
+
+      if (!birthDate) { alert('생년월일을 입력하세요.'); return; }
+      if (currentType === 'match' && !partnerDate) { alert('궁합은 상대 생년월일이 필요합니다.'); return; }
+
+      result.textContent = '🔮 해석 중...';
+
+      // lotto는 클라이언트에서 처리
+      if (currentType === 'lotto') {
+        const nums = Array.from({length:45}, (_,i)=>i+1)
+          .sort(() => Math.random() - 0.5)
+          .slice(0,6).sort((a,b)=>a-b);
+        result.textContent = `이번 주 참고용 번호\n${nums.join(' · ')}\n(엔터테인먼트 목적, 책임 사용)`;
+        return;
+      }
+
+      try {
+        const payload = { type: currentType, birthDate, birthTime, partnerDate, partnerTime, tz: 'Asia/Seoul' };
+        console.log('[FETCH] POST /api/saju', payload);
+        const res = await fetch('/api/saju', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          console.warn('API fail', res.status, txt);
+          throw new Error('API 실패: ' + res.status);
+        }
+        const data = await res.json();
+        result.textContent = data.text || '해석이 비어 있습니다.';
+      } catch (e) {
+        console.error(e);
+        result.textContent = '[로컬 Fallback] 오늘은 차분하게 컨디션 조절에 집중하세요. 중요한 결정은 내일로 미루는 것도 방법입니다.';
+      }
+    });
+  });
+</script>
+  
 </html>
