@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI 사주 — 오늘 운세</title>
+  <title>AI 사주 — 챗GPT가 봐주는 운세</title>
 
   <!-- AdSense 로더: 페이지에 '한 번만', head에 두는 걸 권장 -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2083185896839525" crossorigin="anonymous"></script>
@@ -237,7 +237,7 @@
 
       // 공유하기
       btnShare.addEventListener('click', async () => {
-        const text = result.textContent || 'AI 사주에서 오늘 운세 확인!';
+        const text = result.textContent || '챗GPT로 운세 확인!';
         try {
           if (navigator.share) await navigator.share({ title:'AI 사주', text, url: location.href });
           else { await navigator.clipboard.writeText(location.href); alert('주소를 복사했습니다.'); }
