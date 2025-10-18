@@ -47,7 +47,19 @@
 
     /* 궁합 입력칸 토글 */
     #partner-section{ display:none; }
-    #partner-section.show{ display:block; margin-top:8px; }
+    #partner-section.show{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+    @media (max-width:640px){
+  #partner-section.show{ grid-template-columns:1fr; }
+}
+    input::-webkit-calendar-picker-indicator{
+  filter: invert(1) brightness(2) contrast(2);
+  opacity: 1;
+  cursor: pointer;
+}
   </style>
 </head>
 <body>
@@ -66,7 +78,7 @@
       </div>
 
       <!-- 궁합용 입력칸 (탭 누르면 표시) -->
-      <div id="partner-section" class="row">
+      <div id="partner-section">
         <div>
           <label>상대 생년월일</label>
           <input type="date" id="partnerDate" />
