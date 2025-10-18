@@ -5,28 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI 사주 — 오늘 운세</title>
   <style>
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif; background:#0b0f14; color:#e7eefb; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 120px; }
-    .card { background:#121823; border-radius:16px; padding:16px; margin:12px 0; }
-    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px }
-    label { display:block; font-size:.9rem; color:#a9b7d0; margin:8px 0 4px }
-    input { width:100%; background:#0e1420; color:#e7eefb; border:1px solid #1d2738; border-radius:10px; padding:12px; outline:none }
-    .actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
-    .btn { background:#1a2536; border:1px solid #22324a; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer }
-    .btn.primary { background:linear-gradient(180deg,#2a64ff,#1846ff); border:none }
-    .tabbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
-    .tab { background:#101725; border:1px solid #23324a; color:#cfe2ff; padding:8px 10px; border-radius:999px; font-size:.92rem; cursor:pointer }
-    .tab.active { outline:2px solid #7cc3ff; }
-    .result { white-space:pre-wrap; line-height:1.6 }
-    footer.banner { position:fixed; left:0; right:0; bottom:0; background:#0c111b; border-top:1px solid #1d2738; padding:8px; z-index: 1; }
-    .ad { height:48px; display:flex; align-items:center; justify-content:center; border:1px dashed #334563; color:#8aa3c7; border-radius:12px }
-    .actions, .card { position: relative; z-index: 2; }
+    :root{ --bg:#0b0f14; --card:#121823; --ink:#e7eefb; --muted:#a9b7d0; --accent:#7cc3ff; }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif; background:var(--bg); color:var(--ink); }
+    .wrap{ max-width:720px; margin:0 auto; padding:16px 16px 120px; }
+    .card{ background:var(--card); border-radius:16px; padding:16px; margin:12px 0; }
+    .row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+    @media (max-width:640px){ .row{ grid-template-columns:1fr; } }
+    label{ display:block; font-size:.9rem; color:var(--muted); margin:8px 0 4px }
+    input{ width:100%; min-width:0; background:#0e1420; color:var(--ink); border:1px solid #1d2738; border-radius:10px; padding:12px; outline:none; color-scheme: dark; }
+    /* 달력/시계 아이콘을 밝게 */
+    input::-webkit-calendar-picker-indicator{ filter: invert(1); opacity: .9; cursor:pointer; }
+    input::-webkit-clear-button{ filter: invert(1); }
+    input::-webkit-inner-spin-button{ filter: invert(1); }
+    /* 파이어폭스 대비 */
+    input[type="date"],input[type="time"]{ accent-color:#dfe8ff; }
+
+    .actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
+    .btn{ background:#1a2536; border:1px solid #22324a; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer }
+    .btn.primary{ background:linear-gradient(180deg,#2a64ff,#1846ff); border:none }
+    .tabbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+    .tab{ background:#101725; border:1px solid #23324a; color:#cfe2ff; padding:8px 10px; border-radius:999px; font-size:.92rem; cursor:pointer }
+    .tab.active{ outline:2px solid var(--accent) }
+    .result{ white-space:pre-wrap; line-height:1.6 }
+    .muted{ color:var(--muted) }
+    footer.banner{ position:fixed; left:0; right:0; bottom:0; background:#0c111b; border-top:1px solid #1d2738; padding:8px; z-index:1 }
+    .ad{ height:48px; display:flex; align-items:center; justify-content:center; border:1px dashed #334563; color:#8aa3c7; border-radius:12px }
+    .actions,.card{ position:relative; z-index:2 }
+
+    /* 궁합 영역 토글 */
+    #partner-section{ display:none; }
+    #partner-section.show{ display:block; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <div style="color:#a9b7d0">최소 정보만 입력</div>
+      <div class="muted">최소 정보만 입력</div>
       <div class="row">
         <div>
           <label>생년월일</label>
@@ -35,6 +50,18 @@
         <div>
           <label>태어난 시간 (모르면 00:00)</label>
           <input type="time" id="birthTime" value="00:00" />
+        </div>
+      </div>
+
+      <!-- 궁합용 추가 입력 (탭이 '궁합'일 때만 보이게) -->
+      <div id="partner-section" class="row" style="margin-top:8px">
+        <div>
+          <label>상대 생년월일</label>
+          <input type="date" id="partnerDate" />
+        </div>
+        <div>
+          <label>상대 태어난 시간</label>
+          <input type="time" id="partnerTime" value="00:00" />
         </div>
       </div>
 
@@ -56,7 +83,7 @@
     </div>
 
     <div class="card">
-      <div style="color:#a9b7d0">결과</div>
+      <div class="muted">결과</div>
       <div id="result" class="result">입력 후 [분석하기]를 눌러주세요.</div>
     </div>
   </div>
@@ -69,13 +96,14 @@
     window.addEventListener('error', e => console.warn('[JS ERROR]', e.message));
 
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('[READY] DOM loaded');
-
       const result = document.getElementById('result');
       const btnGo = document.getElementById('btn-go');
       const btnShare = document.getElementById('btn-share');
       const birthDateEl = document.getElementById('birthDate');
       const birthTimeEl = document.getElementById('birthTime');
+      const partnerSection = document.getElementById('partner-section');
+      const partnerDateEl = document.getElementById('partnerDate');
+      const partnerTimeEl = document.getElementById('partnerTime');
 
       let currentType = 'today';
       const tabs = document.querySelectorAll('.tab');
@@ -83,41 +111,45 @@
         tabs.forEach(x => x.classList.remove('active'));
         t.classList.add('active');
         currentType = t.dataset.type || 'today';
-        console.log('[TAB]', currentType);
+        // 궁합 탭이면 상대 정보 표시, 아니면 숨김
+        if (currentType === 'match') partnerSection.classList.add('show');
+        else partnerSection.classList.remove('show');
       }));
 
-      btnGo.addEventListener('click', async () => {
-        console.log('[CLICK] 분석하기 pressed');
-        if (!result) { alert('결과 영역(#result)이 없습니다.'); return; }
+      // 간단 로또
+      const lotto = () => Array.from({length:45}, (_,i)=>i+1)
+          .sort(()=>Math.random()-0.5).slice(0,6).sort((a,b)=>a-b);
 
+      btnGo.addEventListener('click', async () => {
         const birthDate = birthDateEl.value;
         const birthTime = birthTimeEl.value || '00:00';
+        const partnerDate = partnerDateEl?.value;
+        const partnerTime = partnerTimeEl?.value || '00:00';
 
-        if (!birthDate) { alert('생년월일 입력'); return; }
+        if (!birthDate) { alert('생년월일을 입력하세요.'); return; }
+        if (currentType === 'match' && !partnerDate) { alert('궁합은 상대 생년월일이 필요합니다.'); return; }
 
         if (currentType === 'lotto') {
-          const nums = Array.from({length:45}, (_,i)=>i+1).sort(()=>Math.random()-0.5).slice(0,6).sort((a,b)=>a-b);
-          result.textContent = `이번 주 참고용 번호\n${nums.join(' · ')}\n(엔터테인먼트 목적)`;
+          result.textContent = `이번 주 참고용 번호\n${lotto().join(' · ')}\n(엔터테인먼트 목적)`;
           return;
         }
 
         result.textContent = '🔮 해석 중...';
         try {
-          const payload = { type: currentType, birthDate, birthTime, tz:'Asia/Seoul' };
-          console.log('[FETCH] POST /api/saju', payload);
+          const payload = { type: currentType, birthDate, birthTime, partnerDate, partnerTime, tz:'Asia/Seoul' };
           const r = await fetch('/api/saju', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload)
           });
           const txt = await r.text();
-          console.log('[RESP]', r.status, txt);
           let data; try { data = JSON.parse(txt); } catch {}
           if (!r.ok) throw new Error(txt || 'API 실패');
-          result.textContent = (data && data.text) ? data.text : '결과가 비었습니다.';
+          result.textContent = (data && data.text) ? data.text : '해석을 가져오지 못했습니다.';
         } catch (e) {
           console.error(e);
-          result.textContent = '[로컬 Fallback] 오늘은 무리하지 말고 기본에 충실한 하루가 좋습니다.';
+          // [로컬 Fallback] 문구 제거, 부드러운 안내만
+          result.textContent = '해석을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.';
         }
       });
 
