@@ -10,16 +10,28 @@
     body{ margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif; background:var(--bg); color:var(--ink); }
     .wrap{ max-width:720px; margin:0 auto; padding:16px 16px 120px; }
     .card{ background:var(--card); border-radius:16px; padding:16px; margin:12px 0; }
-    .row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     @media (max-width:640px){ .row{ grid-template-columns:1fr; } }
     label{ display:block; font-size:.9rem; color:var(--muted); margin:8px 0 4px }
-    input{ width:100%; min-width:0; background:#0e1420; color:var(--ink); border:1px solid #1d2738; border-radius:10px; padding:12px; outline:none; color-scheme: dark; }
-    /* 달력/시계 아이콘을 밝게 */
-    input::-webkit-calendar-picker-indicator{ filter: invert(1); opacity: .9; cursor:pointer; }
+    input{
+      width:100%;
+      min-width:0;
+      background:#0e1420;
+      color:var(--ink);
+      border:1px solid #1d2738;
+      border-radius:10px;
+      padding:12px;
+      outline:none;
+      color-scheme: dark;
+    }
+    /* 달력/시간 아이콘 흰색 + 배경 맞춤 */
+    input::-webkit-calendar-picker-indicator{
+      filter: invert(1) brightness(2);
+      opacity: 1;
+      cursor: pointer;
+    }
+    input::-webkit-inner-spin-button,
     input::-webkit-clear-button{ filter: invert(1); }
-    input::-webkit-inner-spin-button{ filter: invert(1); }
-    /* 파이어폭스 대비 */
-    input[type="date"],input[type="time"]{ accent-color:#dfe8ff; }
 
     .actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
     .btn{ background:#1a2536; border:1px solid #22324a; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer }
@@ -33,9 +45,9 @@
     .ad{ height:48px; display:flex; align-items:center; justify-content:center; border:1px dashed #334563; color:#8aa3c7; border-radius:12px }
     .actions,.card{ position:relative; z-index:2 }
 
-    /* 궁합 영역 토글 */
+    /* 궁합 입력칸 토글 */
     #partner-section{ display:none; }
-    #partner-section.show{ display:block; }
+    #partner-section.show{ display:block; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -53,8 +65,8 @@
         </div>
       </div>
 
-      <!-- 궁합용 추가 입력 (탭이 '궁합'일 때만 보이게) -->
-      <div id="partner-section" class="row" style="margin-top:8px">
+      <!-- 궁합용 입력칸 (탭 누르면 표시) -->
+      <div id="partner-section" class="row">
         <div>
           <label>상대 생년월일</label>
           <input type="date" id="partnerDate" />
@@ -93,8 +105,6 @@
   </footer>
 
   <script>
-    window.addEventListener('error', e => console.warn('[JS ERROR]', e.message));
-
     document.addEventListener('DOMContentLoaded', () => {
       const result = document.getElementById('result');
       const btnGo = document.getElementById('btn-go');
@@ -106,19 +116,16 @@
       const partnerTimeEl = document.getElementById('partnerTime');
 
       let currentType = 'today';
-      const tabs = document.querySelectorAll('.tab');
-      tabs.forEach(t => t.addEventListener('click', () => {
-        tabs.forEach(x => x.classList.remove('active'));
-        t.classList.add('active');
-        currentType = t.dataset.type || 'today';
-        // 궁합 탭이면 상대 정보 표시, 아니면 숨김
-        if (currentType === 'match') partnerSection.classList.add('show');
-        else partnerSection.classList.remove('show');
-      }));
+      document.querySelectorAll('.tab').forEach(t =>
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          currentType = t.dataset.type;
+          partnerSection.classList.toggle('show', currentType === 'match');
+        })
+      );
 
-      // 간단 로또
-      const lotto = () => Array.from({length:45}, (_,i)=>i+1)
-          .sort(()=>Math.random()-0.5).slice(0,6).sort((a,b)=>a-b);
+      const lotto = () => Array.from({length:45}, (_,i)=>i+1).sort(()=>Math.random()-0.5).slice(0,6).sort((a,b)=>a-b);
 
       btnGo.addEventListener('click', async () => {
         const birthDate = birthDateEl.value;
@@ -148,7 +155,6 @@
           result.textContent = (data && data.text) ? data.text : '해석을 가져오지 못했습니다.';
         } catch (e) {
           console.error(e);
-          // [로컬 Fallback] 문구 제거, 부드러운 안내만
           result.textContent = '해석을 가져오지 못했습니다. 잠시 후 다시 시도해 주세요.';
         }
       });
