@@ -1,159 +1,134 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI 사주 — 오늘 운세</title>
-<meta name="description" content="생년월일/시간만으로 오늘 운세, 한달 운세, 재물운, 연애운, 궁합, 로또번호 추천까지 AI로 간단 확인" />
-<style>
-:root { --bg:#0b0f14; --card:#121823; --ink:#e7eefb; --muted:#a9b7d0; --accent:#7cc3ff; }
-html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif}
-.wrap{max-width:780px;margin:0 auto;padding:16px 16px 96px}
-header{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}
-.brand{font-weight:700;letter-spacing:.3px}
-.card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-label{display:block;font-size:.9rem;color:var(--muted);margin:8px 0 4px}
-input,select{width:100%;background:#0e1420;color:var(--ink);border:1px solid #1d2738;border-radius:10px;padding:12px;outline:none}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.btn{background:#1a2536;border:1px solid #22324a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,#2a64ff,#1846ff);border:none}
-.btn.ghost{background:transparent;border:1px dashed #334563;color:#bcd3ff}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.tab{background:#101725;border:1px solid #23324a;color:#cfe2ff;padding:8px 10px;border-radius:999px;font-size:.92rem;cursor:pointer}
-.tab.active{outline:2px solid var(--accent);}
-.result{white-space:pre-wrap;line-height:1.6}
-.muted{color:var(--muted);font-size:.92rem}
-.ad{display:flex;justify-content:center;align-items:center;height:60px;background:#0e1420;border:1px dashed #334563;border-radius:12px;color:#8aa3c7;font-size:.9rem}
-.share{display:flex;gap:8px}
-footer.banner{position:fixed;left:0;right:0;bottom:0;background:#0c111b;border-top:1px solid #1d2738;padding:8px}
-.foot-inner{max-width:780px;margin:0 auto}
-.small{font-size:.82rem}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 사주 — 오늘 운세</title>
+  <style>
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif; background:#0b0f14; color:#e7eefb; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 120px; }
+    .card { background:#121823; border-radius:16px; padding:16px; margin:12px 0; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px }
+    label { display:block; font-size:.9rem; color:#a9b7d0; margin:8px 0 4px }
+    input { width:100%; background:#0e1420; color:#e7eefb; border:1px solid #1d2738; border-radius:10px; padding:12px; outline:none }
+    .actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
+    .btn { background:#1a2536; border:1px solid #22324a; color:#fff; padding:10px 12px; border-radius:12px; cursor:pointer }
+    .btn.primary { background:linear-gradient(180deg,#2a64ff,#1846ff); border:none }
+    .tabbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px }
+    .tab { background:#101725; border:1px solid #23324a; color:#cfe2ff; padding:8px 10px; border-radius:999px; font-size:.92rem; cursor:pointer }
+    .tab.active { outline:2px solid #7cc3ff; }
+    .result { white-space:pre-wrap; line-height:1.6 }
+    footer.banner { position:fixed; left:0; right:0; bottom:0; background:#0c111b; border-top:1px solid #1d2738; padding:8px; z-index: 1; }
+    .ad { height:48px; display:flex; align-items:center; justify-content:center; border:1px dashed #334563; color:#8aa3c7; border-radius:12px }
+    .actions, .card { position: relative; z-index: 2; }
+  </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-<div class="brand">🔮 AI 사주</div>
-<button class="btn ghost small" id="btn-pwa">홈화면 추가</button>
-</header>
+  <div class="wrap">
+    <div class="card">
+      <div style="color:#a9b7d0">최소 정보만 입력</div>
+      <div class="row">
+        <div>
+          <label>생년월일</label>
+          <input type="date" id="birthDate" />
+        </div>
+        <div>
+          <label>태어난 시간 (모르면 00:00)</label>
+          <input type="time" id="birthTime" value="00:00" />
+        </div>
+      </div>
 
+      <div class="tabbar" id="tabs">
+        <button class="tab active" data-type="today" type="button">오늘</button>
+        <button class="tab" data-type="month" type="button">한달</button>
+        <button class="tab" data-type="wealth" type="button">재물</button>
+        <button class="tab" data-type="love" type="button">연애/결혼</button>
+        <button class="tab" data-type="lotto" type="button">로또</button>
+        <button class="tab" data-type="match" type="button">궁합</button>
+      </div>
 
-<div class="card">
-<div class="muted">최소 정보만 입력</div>
-<div class="row">
-<div>
-<label>생년월일</label>
-<input type="date" id="birthDate" required />
-</div>
-<div>
-<label>태어난 시간 (모르면 00:00)</label>
-<input type="time" id="birthTime" value="00:00" />
-</div>
-</div>
-<details style="margin-top:8px">
-<summary>궁합(선택) — 상대 정보 입력</summary>
-<div class="row" style="margin-top:8px">
-<div>
-<label>상대 생년월일</label>
-<input type="date" id="partnerDate" />
-</div>
-<div>
-<label>상대 태어난 시간</label>
-<input type="time" id="partnerTime" value="00:00" />
-</div>
-</div>
-</details>
+      <div class="actions">
+        <button class="btn primary" id="btn-go" type="button">분석하기</button>
+        <button class="btn" id="btn-share" type="button">공유하기</button>
+      </div>
 
+      <div class="ad" style="margin-top:12px">[광고 자리]</div>
+    </div>
 
-<div class="tabs" id="tabs">
-<button class="tab active" data-type="today">오늘 운세</button>
-<button class="tab" data-type="month">한달 운세</button>
-<button class="tab" data-type="wealth">재물운</button>
-<button class="tab" data-type="love">연애/결혼운</button>
-<button class="tab" data-type="lotto">로또 번호</button>
-<button class="tab" data-type="match">궁합</button>
-</div>
+    <div class="card">
+      <div style="color:#a9b7d0">결과</div>
+      <div id="result" class="result">입력 후 [분석하기]를 눌러주세요.</div>
+    </div>
+  </div>
 
+  <footer class="banner">
+    <div class="ad">[하단 고정 배너]</div>
+  </footer>
 
-<div class="actions">
-<button class="btn primary" id="btn-go">분석하기</button>
-<button class="btn" id="btn-share">공유하기</button>
-</div>
+  <script>
+    window.addEventListener('error', e => console.warn('[JS ERROR]', e.message));
 
-<script>
-  // 콘솔 에러가 있으면 전체 스크립트가 멈추기 때문에 제일 먼저 감지
-  window.addEventListener('error', (e) => {
-    console.warn('[JS ERROR]', e.message);
-  });
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[READY] DOM loaded');
 
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('[READY] DOM loaded');
+      const result = document.getElementById('result');
+      const btnGo = document.getElementById('btn-go');
+      const btnShare = document.getElementById('btn-share');
+      const birthDateEl = document.getElementById('birthDate');
+      const birthTimeEl = document.getElementById('birthTime');
 
-    const btnGo = document.getElementById('btn-go');
-    const result = document.getElementById('result');
-    const birthDateEl = document.getElementById('birthDate');
-    const birthTimeEl = document.getElementById('birthTime');
-    const partnerDateEl = document.getElementById('partnerDate');
-    const partnerTimeEl = document.getElementById('partnerTime');
-
-    // 탭 상태 (없으면 today 기본)
-    let currentType = 'today';
-    const tabs = document.querySelectorAll('.tab');
-    if (tabs.length) {
+      let currentType = 'today';
+      const tabs = document.querySelectorAll('.tab');
       tabs.forEach(t => t.addEventListener('click', () => {
         tabs.forEach(x => x.classList.remove('active'));
         t.classList.add('active');
         currentType = t.dataset.type || 'today';
+        console.log('[TAB]', currentType);
       }));
-    }
 
-    // 클릭 이벤트가 정말로 걸렸는지 로그/알림으로 검증
-    btnGo?.addEventListener('click', async () => {
-      console.log('[CLICK] 분석하기 pressed');
-      // 1단계: 클릭 반응 확인용
-      // alert('클릭 OK'); // 필요하면 잠깐 주석 해제해서 확인
+      btnGo.addEventListener('click', async () => {
+        console.log('[CLICK] 분석하기 pressed');
+        if (!result) { alert('결과 영역(#result)이 없습니다.'); return; }
 
-      const birthDate = birthDateEl?.value;
-      const birthTime = birthTimeEl?.value || '00:00';
-      const partnerDate = partnerDateEl?.value;
-      const partnerTime = partnerTimeEl?.value || '00:00';
+        const birthDate = birthDateEl.value;
+        const birthTime = birthTimeEl.value || '00:00';
 
-      if (!birthDate) { alert('생년월일을 입력하세요.'); return; }
-      if (currentType === 'match' && !partnerDate) { alert('궁합은 상대 생년월일이 필요합니다.'); return; }
+        if (!birthDate) { alert('생년월일 입력'); return; }
 
-      result.textContent = '🔮 해석 중...';
-
-      // lotto는 클라이언트에서 처리
-      if (currentType === 'lotto') {
-        const nums = Array.from({length:45}, (_,i)=>i+1)
-          .sort(() => Math.random() - 0.5)
-          .slice(0,6).sort((a,b)=>a-b);
-        result.textContent = `이번 주 참고용 번호\n${nums.join(' · ')}\n(엔터테인먼트 목적, 책임 사용)`;
-        return;
-      }
-
-      try {
-        const payload = { type: currentType, birthDate, birthTime, partnerDate, partnerTime, tz: 'Asia/Seoul' };
-        console.log('[FETCH] POST /api/saju', payload);
-        const res = await fetch('/api/saju', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          console.warn('API fail', res.status, txt);
-          throw new Error('API 실패: ' + res.status);
+        if (currentType === 'lotto') {
+          const nums = Array.from({length:45}, (_,i)=>i+1).sort(()=>Math.random()-0.5).slice(0,6).sort((a,b)=>a-b);
+          result.textContent = `이번 주 참고용 번호\n${nums.join(' · ')}\n(엔터테인먼트 목적)`;
+          return;
         }
-        const data = await res.json();
-        result.textContent = data.text || '해석이 비어 있습니다.';
-      } catch (e) {
-        console.error(e);
-        result.textContent = '[로컬 Fallback] 오늘은 차분하게 컨디션 조절에 집중하세요. 중요한 결정은 내일로 미루는 것도 방법입니다.';
-      }
+
+        result.textContent = '🔮 해석 중...';
+        try {
+          const payload = { type: currentType, birthDate, birthTime, tz:'Asia/Seoul' };
+          console.log('[FETCH] POST /api/saju', payload);
+          const r = await fetch('/api/saju', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const txt = await r.text();
+          console.log('[RESP]', r.status, txt);
+          let data; try { data = JSON.parse(txt); } catch {}
+          if (!r.ok) throw new Error(txt || 'API 실패');
+          result.textContent = (data && data.text) ? data.text : '결과가 비었습니다.';
+        } catch (e) {
+          console.error(e);
+          result.textContent = '[로컬 Fallback] 오늘은 무리하지 말고 기본에 충실한 하루가 좋습니다.';
+        }
+      });
+
+      btnShare.addEventListener('click', async () => {
+        const text = result.textContent || 'AI 사주에서 오늘 운세 확인!';
+        try {
+          if (navigator.share) await navigator.share({ title:'AI 사주', text, url: location.href });
+          else { await navigator.clipboard.writeText(location.href); alert('주소를 복사했습니다.'); }
+        } catch {}
+      });
     });
-  });
-</script>
-  
+  </script>
+</body>
 </html>
