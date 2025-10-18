@@ -1,371 +1,83 @@
-# ✅ 최종 제안: 가장 빨리 올리는 구성
-
-* **플랫폼**: 웹(모바일 최적화) 단일 페이지 + **서버리스 API**
-* **호스팅**: Vercel 무료 플랜(정적 파일 + Serverless/Edge Function)
-* **AI 엔진**: OpenAI API (서버리스 함수에서 호출 — 키는 서버에만 보관)
-* **기능(최소)**: 생년월일, 태어난 시간 입력 → 버튼으로
-
-  * 오늘 운세, 한달 운세, 재물운, 연애/결혼운, **로또번호 추천(엔터테인먼트용)**, 궁합(상대 생년월일/시간 추가)
-  * 결과 공유(모바일 Web Share API)
-  * **오프토픽 차단**: UI가 버튼 선택형이라 비(非)사주 질문 경로 자체 제거
-* **광고**: 페이지 하단 고정 배너 슬롯 + 결과 카드 하단 슬롯 (초기엔 placeholder → AdSense 승인 후 코드 교체)
-* **비용**: 0원(트래픽 적을 때). 성장 시에도 소액
-
-> **왜 이 방식?**
->
-> * *오늘 바로 배포 가능* (Vercel 10~20분)
-> * 키가 브라우저에 노출되지 않음(서버리스 함수로 프록시)
-> * 웹/모바일 동시 대응, PWA로 홈화면 추가도 쉬움
-
----
-
-## 1) 폴더 구조 (2파일만 시작)
-
-```
-my-saju/
-├─ index.html          # 프론트(단일 페이지)
-└─ api/
-   └─ saju.js          # Vercel Serverless Edge Function (OpenAI 호출)
-```
-
----
-
-## 2) index.html (복사-붙여넣기 후 바로 동작)
-
-> ✅ 아래 코드에서 `data-ad-client` / `data-ad-slot` 은 **추후 AdSense 승인 후 교체**. 지금은 placeholder.
-
-```html
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI 사주 — 오늘 운세</title>
-  <meta name="description" content="생년월일/시간만으로 오늘 운세, 한달 운세, 재물운, 연애운, 궁합, 로또번호 추천까지 AI로 간단 확인" />
-  <style>
-    :root { --bg:#0b0f14; --card:#121823; --ink:#e7eefb; --muted:#a9b7d0; --accent:#7cc3ff; }
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif}
-    .wrap{max-width:780px;margin:0 auto;padding:16px 16px 96px}
-    header{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}
-    .brand{font-weight:700;letter-spacing:.3px}
-    .card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    label{display:block;font-size:.9rem;color:var(--muted);margin:8px 0 4px}
-    input,select{width:100%;background:#0e1420;color:var(--ink);border:1px solid #1d2738;border-radius:10px;padding:12px;outline:none}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-    .btn{background:#1a2536;border:1px solid #22324a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer}
-    .btn.primary{background:linear-gradient(180deg,#2a64ff,#1846ff);border:none}
-    .btn.ghost{background:transparent;border:1px dashed #334563;color:#bcd3ff}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-    .tab{background:#101725;border:1px solid #23324a;color:#cfe2ff;padding:8px 10px;border-radius:999px;font-size:.92rem;cursor:pointer}
-    .tab.active{outline:2px solid var(--accent);}
-    .result{white-space:pre-wrap;line-height:1.6}
-    .muted{color:var(--muted);font-size:.92rem}
-    .ad{display:flex;justify-content:center;align-items:center;height:60px;background:#0e1420;border:1px dashed #334563;border-radius:12px;color:#8aa3c7;font-size:.9rem}
-    .share{display:flex;gap:8px}
-    footer.banner{position:fixed;left:0;right:0;bottom:0;background:#0c111b;border-top:1px solid #1d2738;padding:8px}
-    .foot-inner{max-width:780px;margin:0 auto}
-    .small{font-size:.82rem}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI 사주 — 오늘 운세</title>
+<meta name="description" content="생년월일/시간만으로 오늘 운세, 한달 운세, 재물운, 연애운, 궁합, 로또번호 추천까지 AI로 간단 확인" />
+<style>
+:root { --bg:#0b0f14; --card:#121823; --ink:#e7eefb; --muted:#a9b7d0; --accent:#7cc3ff; }
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}
+.brand{font-weight:700;letter-spacing:.3px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+label{display:block;font-size:.9rem;color:var(--muted);margin:8px 0 4px}
+input,select{width:100%;background:#0e1420;color:var(--ink);border:1px solid #1d2738;border-radius:10px;padding:12px;outline:none}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{background:#1a2536;border:1px solid #22324a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,#2a64ff,#1846ff);border:none}
+.btn.ghost{background:transparent;border:1px dashed #334563;color:#bcd3ff}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.tab{background:#101725;border:1px solid #23324a;color:#cfe2ff;padding:8px 10px;border-radius:999px;font-size:.92rem;cursor:pointer}
+.tab.active{outline:2px solid var(--accent);}
+.result{white-space:pre-wrap;line-height:1.6}
+.muted{color:var(--muted);font-size:.92rem}
+.ad{display:flex;justify-content:center;align-items:center;height:60px;background:#0e1420;border:1px dashed #334563;border-radius:12px;color:#8aa3c7;font-size:.9rem}
+.share{display:flex;gap:8px}
+footer.banner{position:fixed;left:0;right:0;bottom:0;background:#0c111b;border-top:1px solid #1d2738;padding:8px}
+.foot-inner{max-width:780px;margin:0 auto}
+.small{font-size:.82rem}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">🔮 AI 사주</div>
-      <button class="btn ghost small" id="btn-pwa">홈화면 추가</button>
-    </header>
+<div class="wrap">
+<header>
+<div class="brand">🔮 AI 사주</div>
+<button class="btn ghost small" id="btn-pwa">홈화면 추가</button>
+</header>
 
-    <div class="card">
-      <div class="muted">최소 정보만 입력</div>
-      <div class="row">
-        <div>
-          <label>생년월일</label>
-          <input type="date" id="birthDate" required />
-        </div>
-        <div>
-          <label>태어난 시간 (모르면 00:00)</label>
-          <input type="time" id="birthTime" value="00:00" />
-        </div>
-      </div>
-      <details style="margin-top:8px">
-        <summary>궁합(선택) — 상대 정보 입력</summary>
-        <div class="row" style="margin-top:8px">
-          <div>
-            <label>상대 생년월일</label>
-            <input type="date" id="partnerDate" />
-          </div>
-          <div>
-            <label>상대 태어난 시간</label>
-            <input type="time" id="partnerTime" value="00:00" />
-          </div>
-        </div>
-      </details>
 
-      <div class="tabs" id="tabs">
-        <button class="tab active" data-type="today">오늘 운세</button>
-        <button class="tab" data-type="month">한달 운세</button>
-        <button class="tab" data-type="wealth">재물운</button>
-        <button class="tab" data-type="love">연애/결혼운</button>
-        <button class="tab" data-type="lotto">로또 번호</button>
-        <button class="tab" data-type="match">궁합</button>
-      </div>
+<div class="card">
+<div class="muted">최소 정보만 입력</div>
+<div class="row">
+<div>
+<label>생년월일</label>
+<input type="date" id="birthDate" required />
+</div>
+<div>
+<label>태어난 시간 (모르면 00:00)</label>
+<input type="time" id="birthTime" value="00:00" />
+</div>
+</div>
+<details style="margin-top:8px">
+<summary>궁합(선택) — 상대 정보 입력</summary>
+<div class="row" style="margin-top:8px">
+<div>
+<label>상대 생년월일</label>
+<input type="date" id="partnerDate" />
+</div>
+<div>
+<label>상대 태어난 시간</label>
+<input type="time" id="partnerTime" value="00:00" />
+</div>
+</div>
+</details>
 
-      <div class="actions">
-        <button class="btn primary" id="btn-go">분석하기</button>
-        <button class="btn" id="btn-share">공유하기</button>
-      </div>
 
-      <div class="ad" style="margin-top:12px" id="ad-top">[광고 자리] AdSense 승인 후 코드 삽입</div>
-    </div>
+<div class="tabs" id="tabs">
+<button class="tab active" data-type="today">오늘 운세</button>
+<button class="tab" data-type="month">한달 운세</button>
+<button class="tab" data-type="wealth">재물운</button>
+<button class="tab" data-type="love">연애/결혼운</button>
+<button class="tab" data-type="lotto">로또 번호</button>
+<button class="tab" data-type="match">궁합</button>
+</div>
 
-    <div class="card">
-      <div class="muted">결과</div>
-      <div id="result" class="result">입력 후 [분석하기]를 눌러주세요.</div>
-    </div>
 
-    <div class="card">
-      <div class="ad" id="ad-bottom">[광고 자리] AdSense 승인 후 코드 삽입</div>
-    </div>
-
-    <div class="card small muted">
-      ※ 본 서비스는 오락/엔터테인먼트 목적입니다. 의료·법률·투자 등 중대한 의사결정에 활용하지 마세요.
-    </div>
-  </div>
-
-  <footer class="banner">
-    <div class="foot-inner">
-      <div class="ad" id="ad-footer">[하단 고정 배너] AdSense 코드로 교체</div>
-    </div>
-  </footer>
-
-  <script>
-    // 탭 토글
-    const tabs = document.querySelectorAll('.tab');
-    let currentType = 'today';
-    tabs.forEach(t => t.addEventListener('click', () => {
-      tabs.forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      currentType = t.dataset.type;
-    }));
-
-    // 간단 로또 번호(한국 1~45에서 6개)
-    function lotto() {
-      const nums = Array.from({length:45}, (_,i)=>i+1);
-      for (let i=nums.length-1;i>0;i--) { const j = Math.floor(Math.random()*(i+1)); [nums[i],nums[j]]=[nums[j],nums[i]]; }
-      return nums.slice(0,6).sort((a,b)=>a-b);
-    }
-
-    // Fallback: API 실패 시 간단 생성 규칙(해시 기반)
-    function quickFallback(type, seed){
-      function h(s){let x=0; for(const c of s) x=(x*131 + c.charCodeAt(0))>>>0; return x;}
-      const r = (n)=> (h(seed+n) % 100) / 100;
-      const tones = ["평온", "활기", "집중", "확장", "정리", "신중", "균형"];
-      const tone = tones[ Math.floor(r('t')*tones.length) ];
-      const luck = Math.floor(r('l')*100);
-      const tip  = ["새로운 시도보다 정비에 집중","작은 약속을 지키면 큰 운이 온다","욕심을 줄이면 안정","사람 일이 우선","부탁은 오후에","문서·계약은 재확인"][Math.floor(r('p')*6)];
-      return `[#로컬예측] 오늘 분위기: ${tone}\n행운지수: ${luck}/100\nTip: ${tip}`;
-    }
-
-    async function askAI(payload){
-      const res = await fetch('/api/saju', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('API 실패');
-      const data = await res.json();
-      return data.text;
-    }
-
-    document.getElementById('btn-go').addEventListener('click', async () => {
-      const birthDate = document.getElementById('birthDate').value;
-      const birthTime = document.getElementById('birthTime').value || '00:00';
-      const partnerDate = document.getElementById('partnerDate').value;
-      const partnerTime = document.getElementById('partnerTime').value || '00:00';
-      const result = document.getElementById('result');
-
-      if (!birthDate){ alert('생년월일을 입력해주세요.'); return; }
-      if (currentType==='match' && !partnerDate){ alert('궁합은 상대 생년월일이 필요합니다.'); return; }
-
-      result.textContent = '🔮 해석 중...';
-
-      try {
-        if (currentType === 'lotto'){
-          const nums = lotto();
-          result.textContent = `이번 주 참고용 번호\n${nums.join(' · ')}\n(엔터테인먼트 목적, 책임 사용)`;
-          return;
-        }
-        const payload = { type: currentType, birthDate, birthTime, partnerDate, partnerTime, tz: 'Asia/Seoul' };
-        const text = await askAI(payload);
-        result.textContent = text;
-      } catch(e){
-        const seed = `${birthDate} ${birthTime} ${currentType}`;
-        result.textContent = quickFallback(currentType, seed);
-      }
-    });
-
-    // 공유
-    document.getElementById('btn-share').addEventListener('click', async () => {
-      const text = document.getElementById('result').textContent || 'AI 사주에서 오늘 운세 확인!';
-      try {
-        if (navigator.share){ await navigator.share({ title:'AI 사주', text, url: location.href }); }
-        else { await navigator.clipboard.writeText(location.href); alert('주소를 복사했습니다.'); }
-      } catch(_){}
-    });
-
-    // PWA 설치 유도(간단)
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt = e; });
-    document.getElementById('btn-pwa').addEventListener('click', async ()=>{ if(deferredPrompt){ deferredPrompt.prompt(); }});
-  </script>
-
-  <!-- AdSense: 승인 후 아래 주석 해제 + 본인 client / slot 으로 교체
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script>
-  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXX" data-ad-slot="YYYY" data-ad-format="auto" data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-  -->
-</body>
+<div class="actions">
+<button class="btn primary" id="btn-go">분석하기</button>
+<button class="btn" id="btn-share">공유하기</button>
+</div>
 </html>
-```
-
----
-
-## 3) api/saju.js (Vercel Edge Function)
-
-> **환경변수**: `OPENAI_API_KEY` 를 Vercel Project → Settings → Environment Variables에 추가
-
-```js
-export const runtime = 'edge';
-
-function buildPrompt({ type, birthDate, birthTime, partnerDate, partnerTime, tz }) {
-  const intent = {
-    today: '오늘 운세',
-    month: '한달 운세',
-    wealth: '재물운',
-    love: '연애/결혼운',
-    match: '궁합'
-  }[type] || '오늘 운세';
-
-  const base = `당신은 한국 사용자를 위한 사주 해석가입니다. 반드시 한국어로 짧고 명확하게 답합니다.\n- 입력: 생년월일, 태어난 시간(모르면 00:00), 시간대(${tz}).\n- 출력은 마크다운 없이 순수 텍스트.\n- 금지: 의료/법률/투자 확정 조언, 미신 강요, 개인 정보 수집 유도.\n- 톤: 차분하고 현실적인 조언 2~3가지 포함.\n- 길이: 400~700자.\n- 요청 범위를 넘는 질문은 거절(사주 관련 범주만).\n- 로또/복권은 반드시 엔터테인먼트용 문구 포함.\n`;
-
-  const ask = type === 'match'
-    ? `${intent}을 간결히 설명. 두 사람\nA: ${birthDate} ${birthTime}\nB: ${partnerDate} ${partnerTime}\n궁합 포인트(소통, 가치관, 갈등관리)와 유의점 2~3개, 좋은 날짜 힌트 1개.`
-    : `${intent}을 간결히 설명.\n대상: ${birthDate} ${birthTime}\n핵심 운세 요약 3줄 → 세부 4~6줄 → 마무리 1줄(현실 조언).`;
-
-  return `${base}\n${ask}`;
-}
-
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders() });
-  }
-
-  try {
-    const body = await req.json();
-    const { type, birthDate, birthTime = '00:00', partnerDate, partnerTime = '00:00', tz = 'Asia/Seoul' } = body || {};
-    if (!birthDate) return json({ error: 'birthDate required' }, 400);
-
-    const prompt = buildPrompt({ type, birthDate, birthTime, partnerDate, partnerTime, tz });
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return json({ error: 'Server misconfig: OPENAI_API_KEY missing' }, 500);
-
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a concise Korean fortune interpreter (사주). Stay strictly on topic.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 600
-      })
-    });
-
-    if (!resp.ok) {
-      const t = await resp.text();
-      return json({ error: 'OpenAI error', detail: t }, 502);
-    }
-
-    const data = await resp.json();
-    const text = data.choices?.[0]?.message?.content?.trim() || '해석을 가져오지 못했습니다.';
-    return json({ text });
-  } catch (e) {
-    return json({ error: e?.message || 'Unknown error' }, 500);
-  }
-}
-
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', ...corsHeaders() } });
-}
-
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-  };
-}
-```
-
----
-
-## 4) 배포 (Vercel — 10~20분)
-
-1. **깃 저장소 생성** → 위 2파일 커밋
-2. **Vercel 가입/로그인** → New Project → 해당 리포 선택 → 프레임워크: *Other* (정적)
-3. Project Settings → **Environment Variables** → `OPENAI_API_KEY` 추가
-4. Deploy → 완료 후 제공된 URL 접속
-5. AdSense 승인 대기 전까지는 **광고 박스 placeholder 유지** (승인 후 스크립트 교체)
-
-> 참고: 원한다면 Cloudflare Pages + Functions로도 동일하게 가능 (무료). 단, 시작속도는 Vercel이 보통 더 간단.
-
----
-
-## 5) 광고(AdSense/AdMob) 빠르게 적용 팁
-
-* **안드로이드용 AdMob 계정**은 *앱 광고* 전용입니다. **웹은 AdSense**가 필요합니다. 같은 구글 계정으로 AdSense를 신규 개설해 사용하면 됩니다.
-* AdSense는 **도메인 승인** 절차가 있어 시간이 걸릴 수 있음 → 그 전엔 **placeholder** 유지. 승인 후 `client`/`slot` 치환.
-* 초기엔 **하단 고정 1개 + 결과 카드 내부 1개** 정도로 과하지 않게 운영(정책 위반 리스크↓).
-
----
-
-## 6) 운영/정책 주의 (필수)
-
-* 개인정보 최소 수집(생년월일, 시간). **저장하지 않고 세션 내 처리** 권장.
-* 결과 하단에 **엔터테인먼트 고지** 유지.
-* 복권/투자 관련 표현은 **책임 회피 문구** 포함(코드에 반영됨).
-* AdSense 정책: **과도한 클릭 유도 금지**, 레이아웃과 구분, 콘텐츠 품질 확보.
-
----
-
-## 7) 홍보(스팸 없이, 오늘 당장 가능한 것)
-
-* **네이버 블로그/포스트 1건**: 키워드 "오늘 운세, 사주, 궁합, 로또번호 추천" 포함. 스크린샷 2~3장 + 링크.
-* **인스타 릴스/스토리**: 앱 사용 화면 10~15초, 링크 스티커. *유명인 댓글 스팸은 계정 제한 위험* → 비추.
-* **카카오톡 오픈채팅/소모임 커뮤니티**: 점성/운세 관심방에 소개 1회(운영진 가이드 준수).
-* **카카오뷰/네이버 프리즘/브런치** 등 발행 채널 1곳 더.
-* **앱 아이콘/OG 태그** 설정으로 링크 미리보기 이쁘게(제목/설명/이모지).
-* 초반엔 **친구·사내 공유** → 구전 효과.
-
----
-
-## 8) 내일로 미루지 않을 체크리스트 (오늘 마감용)
-
-* [ ] index.html 붙여넣고 로고/타이틀만 수정
-* [ ] Vercel 프로젝트 생성 → `OPENAI_API_KEY` 설정 → 배포
-* [ ] 실제 입력으로 5개 시나리오 테스트(오늘/한달/재물/연애/궁합)
-* [ ] AdSense 신청(또는 나중에) & placeholder 유지
-* [ ] 블로그/인스타/카톡 채널 2곳 이상에 공유
-
----
-
-## 9) 다음 스텝(옵션)
-
-* PWA 매니페스트/서비스워커 추가로 **홈화면 앱화**
-* 결과 **PDF/이미지로 저장** (공유율↑)
-* 간단 **A/B 테스트**: 문장 톤·길이, 광고 위치
-* **접속 통계**: Cloudflare Turnstile(봇 방어) + Cloudflare Web Analytics(무료)
-
-```
-```
