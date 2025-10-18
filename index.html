@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI 사주 — 오늘 운세</title>
+
+  <!-- AdSense 로더: 페이지에 '한 번만', head에 두는 걸 권장 -->
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2083185896839525"
+    crossorigin="anonymous"></script>
+
   <style>
     :root{ --bg:#0b0f14; --card:#121823; --ink:#e7eefb; --muted:#a9b7d0; --accent:#7cc3ff; }
     *{ box-sizing:border-box }
@@ -27,28 +33,17 @@
       color-scheme: dark;
     }
 
-    /* ── 커스텀 아이콘 적용 ───────────────────────────── */
-    /* 기본 브라우저 아이콘 숨김 */
+    /* 커스텀 아이콘 */
     input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator{
-      opacity:0;
-      pointer-events:none;
-    }
-
-    /* 아이콘 오버레이 컨테이너 */
+    input[type="time"]::-webkit-calendar-picker-indicator{ opacity:0; pointer-events:none; }
     .picker-wrap{ position:relative; }
-    .picker-wrap input{ padding-right:44px; } /* 아이콘 공간 확보 */
-
+    .picker-wrap input{ padding-right:44px; }
     .picker-btn{
       position:absolute; right:10px; top:50%; transform:translateY(-50%);
-      width:28px; height:28px; border-radius:8px;
-      background:#0e1420; border:1px solid #22324a;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
+      width:28px; height:28px; border-radius:8px; background:#0e1420; border:1px solid #22324a;
+      display:flex; align-items:center; justify-content:center; cursor:pointer;
     }
     .picker-btn:hover{ border-color:#2f4b78; }
-
-    /* 흰색 SVG 아이콘 */
     .picker-btn svg{ width:16px; height:16px; fill:#ffffff; opacity:.95; }
 
     .actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
@@ -59,8 +54,11 @@
     .tab.active{ outline:2px solid var(--accent) }
     .result{ white-space:pre-wrap; line-height:1.6 }
     .muted{ color:var(--muted) }
+
     footer.banner{ position:fixed; left:0; right:0; bottom:0; background:#0c111b; border-top:1px solid #1d2738; padding:8px; z-index:1 }
-    .ad{ height:48px; display:flex; align-items:center; justify-content:center; border:1px dashed #334563; color:#8aa3c7; border-radius:12px }
+
+    /* 광고 컨테이너: 고정 height 제거, 필요시 최소 높이만 */
+    .ad{ min-height: 90px; display:flex; align-items:center; justify-content:center; border-radius:12px }
     .actions,.card{ position:relative; z-index:2 }
 
     /* 궁합 입력칸 토글 (보일 때도 grid 유지) */
@@ -87,7 +85,6 @@
           <div class="picker-wrap">
             <input type="date" id="birthDate" />
             <button class="picker-btn" type="button" data-target="birthDate" aria-label="달력 열기">
-              <!-- 달력 아이콘 -->
               <svg viewBox="0 0 24 24"><path d="M7 2v2H5a2 2 0 0 0-2 2v2h18V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm14 8H3v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10z"/></svg>
             </button>
           </div>
@@ -97,14 +94,13 @@
           <div class="picker-wrap">
             <input type="time" id="birthTime" value="00:00" />
             <button class="picker-btn" type="button" data-target="birthTime" aria-label="시계 열기">
-              <!-- 시계 아이콘 -->
               <svg viewBox="0 0 24 24"><path d="M12 1a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm1 11.414V6h-2v7h.002L13 15l1.414-1.414L13 12.414z"/></svg>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- 궁합용 입력칸 (탭 누르면 표시) -->
+      <!-- 궁합용 입력칸 -->
       <div id="partner-section">
         <div>
           <label>상대 생년월일</label>
@@ -140,21 +136,16 @@
         <button class="btn" id="btn-share" type="button">공유하기</button>
       </div>
 
-      <div class="ad">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2083185896839525"
-     crossorigin="anonymous"></script>
-
-  <ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-2083185896839525"
-     data-ad-slot="5762619290"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-
-  <script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
-</div>
+      <!-- 상단 광고 -->
+      <div class="ad" style="border:none; padding:0;">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-2083185896839525"
+             data-ad-slot="5762619290"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
     </div>
 
     <div class="card">
@@ -164,15 +155,17 @@
   </div>
 
   <footer class="banner">
-  <div class="ad">
-    <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-2083185896839525"
-       data-ad-slot="5762619290"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
-  </div>
-</footer>
+    <!-- 하단 고정 배너 광고 -->
+    <div class="ad" style="border:none; padding:0;">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-2083185896839525"
+           data-ad-slot="5762619290"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+  </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
