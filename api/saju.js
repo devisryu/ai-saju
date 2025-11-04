@@ -15,6 +15,7 @@ function buildPrompt({ type, birthDate, birthTime, partnerDate, partnerTime, tz 
     month: '한달 운세',
     nextyear: '내년 운세', 
     wealth: '재물운',
+    work: '학업/직업',
     love: '연애/결혼운',
     match: '궁합',
   };
